@@ -57,7 +57,7 @@ Every request a chat sends carries its whole surviving history. A coordinator ch
 
 ## Install
 
-Requires DSH 0.2.1-rc.5 or newer, the `web` profile and [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) (0.28.x on DSH 0.2.1).
+Requires DSH 0.2.1-rc.5 or newer, the `web` profile and [dsh-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) (pin 0.28.2 on DSH 0.2.1; its latest needs DSH 0.2.2).
 
 ```sh
 cd ~/.dsh && dsh plugin --profile web add dsh-better-sidebar && dsh plugin --profile web add @lucagiftzek/dsh-conductor
