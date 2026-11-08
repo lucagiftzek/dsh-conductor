@@ -4,6 +4,7 @@
  * parsers and the model tool policy.
  */
 import { test } from 'node:test'
+import { importCore } from '../lib/context/core-imports.js'
 import assert from 'node:assert/strict'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -164,7 +165,10 @@ test('engine: handoff mode without the LLM seam falls back to the regular summar
   remove()
 }))
 
-test('engine: handoff mode with a model stream writes the model text verbatim', () => withTmp(async (dir) => {
+// Needs the real BlockAssembler from an installed DSH (dsh-llm); skipped on a bare CI runner.
+const HAVE_DSH_LLM = Boolean((await importCore('@deepseek-ai/dsh-llm')).mod?.BlockAssembler)
+
+test('engine: handoff mode with a model stream writes the model text verbatim', { skip: HAVE_DSH_LLM ? false : 'no DSH install: @deepseek-ai/dsh-llm not found' }, () => withTmp(async (dir) => {
   const { proto, calls } = fakeProto()
   const state = engineState(dir)
   const remove = installPatch(proto, state)
