@@ -5,7 +5,7 @@
 Fresh context in the same chat, rewind to any prompt (chat and files), automatic compaction at your level and recovery after failed turns, all in one sidebar tab.
 
 ```bash
-dsh plugin --profile web add dsh-better-sidebar   # the tab host, skip if installed
+dsh plugin --profile web add dsh-better-sidebar   # the tab host, skip if installed (on DSH 0.2.1: dsh-better-sidebar@0.28.2)
 dsh plugin --profile web add @lucagiftzek/dsh-conductor
 # or from GitHub: dsh plugin --profile web add github:lucagiftzek/dsh-conductor
 # restart dsh web, then open the Conductor tab from the sidebar's + menu
@@ -61,6 +61,7 @@ Requires DSH 0.2.1-rc.5 or newer, the `web` profile and [dsh-better-sidebar](htt
 
 ```sh
 cd ~/.dsh && dsh plugin --profile web add dsh-better-sidebar && dsh plugin --profile web add @lucagiftzek/dsh-conductor
+# on DSH 0.2.1 pin the sidebar: dsh plugin --profile web add dsh-better-sidebar@0.28.2 (its latest needs DSH 0.2.2)
 # or from GitHub: dsh plugin --profile web add github:lucagiftzek/dsh-conductor
 # restart dsh web
 ```
