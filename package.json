@@ -18,7 +18,8 @@
     "lib",
     "scripts",
     "!lib/**/*.map",
-    "!lib/*.map"
+    "!lib/*.map",
+    "!docs/**/*.png"
   ],
   "bin": {
     "dsh-post": "scripts/dsh-post"
