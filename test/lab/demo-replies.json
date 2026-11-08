@@ -1,0 +1,79 @@
+{
+  "Plan the 0.4 release of the billing service": {
+    "title": "Release 0.4: billing service",
+    "reply": "Here is a short plan for **0.4**:\n\n1. **Rounding fix** in `src/invoice.ts`: totals are rounded per line today, they should be rounded once per invoice.\n2. **Retry with backoff** in the payment client, so a 503 from the provider does not fail the checkout.\n3. **Changelog** and the migration note for the new `rounding` setting.\n4. Tag `v0.4.0` once CI is green on main.\n\nI will start with a review of the rounding change."
+  },
+  "Review the rounding change in src/invoice.ts": {
+    "tools": [
+      {
+        "name": "read",
+        "args": {
+          "file_path": "/tmp/demo-app/src/invoice.ts"
+        }
+      }
+    ],
+    "reply": "Review of `src/invoice.ts`:\n\n- **Bug:** `lineTotal` rounds every line with `Math.round`, so an invoice with many small lines can drift by a few cents.\n- **Fix:** keep lines in integer cents and round once in `invoiceTotal`.\n- **Tests:** add a case with 30 lines of 0.333 EUR; today it totals 9.90, the correct total is 9.99.\n\nThe rest of the file looks good: currency handling is explicit and the tax rate comes from the customer record."
+  },
+  "Add a retry with backoff to the payment client": {
+    "tools": [
+      {
+        "name": "read",
+        "args": {
+          "file_path": "/tmp/demo-app/src/payments.ts"
+        }
+      },
+      {
+        "name": "write",
+        "args": {
+          "file_path": "/tmp/demo-app/src/payments.ts",
+          "content": "import { sleep } from './util'\n\nconst RETRYABLE = new Set([429, 502, 503, 504])\n\n/** Charge a card, retrying transient provider errors with exponential backoff. */\nexport async function charge(client, request, { attempts = 4, baseMs = 250 } = {}) {\n  for (let attempt = 1; ; attempt += 1) {\n    const res = await client.post('/charges', request)\n    if (res.ok || !RETRYABLE.has(res.status) || attempt === attempts) return res\n    await sleep(baseMs * 2 ** (attempt - 1))\n  }\n}\n"
+        }
+      }
+    ],
+    "reply": "Done: `charge()` now retries 429 and 5xx answers up to 4 times, waiting 250 ms, 500 ms, 1 s and 2 s. Card declines (402) are never retried.\n\nNext I will update the changelog."
+  },
+  "Update the changelog for 0.4": {
+    "tools": [
+      {
+        "name": "read",
+        "args": {
+          "file_path": "/tmp/demo-app/CHANGELOG.md"
+        }
+      },
+      {
+        "name": "write",
+        "args": {
+          "file_path": "/tmp/demo-app/CHANGELOG.md",
+          "content": "# Changelog\n\n## 0.4.0\n\n- Invoices are rounded once per invoice instead of per line.\n- The payment client retries transient provider errors with backoff.\n- New setting `rounding` (default `invoice`).\n\n## 0.3.2\n\n- Fix the VAT label on credit notes.\n"
+        }
+      }
+    ],
+    "reply": "The changelog has a **0.4.0** section with the rounding fix, the retry and the new `rounding` setting."
+  },
+  "What is left before we tag 0.4?": {
+    "reply": "Left before tagging **v0.4.0**:\n\n- [x] Rounding fix reviewed\n- [x] Retry with backoff in the payment client\n- [x] Changelog\n- [ ] One more green CI run on main\n- [ ] Free some space on staging before the nightly backup\n\nOnce CI reports back I can tag the release."
+  },
+  "Watch CI and the staging checks for the billing service": {
+    "title": "Coordinator",
+    "reply": "I will watch the pipeline and the staging checks, and leave short notes in the release chat without interrupting it."
+  },
+  "Refresh the API docs for the invoice endpoints": {
+    "title": "Docs refresh",
+    "reply": "The invoice endpoints are documented in `docs/api/invoices.md`. I updated the examples for the new rounding rule and added the `rounding` setting to the reference table."
+  },
+  "Find out why the checkout test fails one run in twenty": {
+    "title": "Flaky test hunt",
+    "reply": "The checkout test depends on the wall clock: it builds an invoice dated *now* and compares it with a fixture dated at midnight. Runs close to midnight UTC fail. A fixed clock in the test setup fixes it."
+  },
+  "Draft the migration note for the rounding setting": {
+    "title": "Migration note",
+    "reply": "Draft:\n\n> **Rounding.** 0.4 rounds once per invoice. To keep the old behaviour while you check your reports, set `rounding: line`. The option will be removed in 0.6."
+  },
+  "Summarise last week's support tickets about invoices": {
+    "title": "Support tickets review",
+    "reply": "Twelve tickets mentioned invoices last week: seven about cents differences (the rounding bug fixed in 0.4), three about the VAT label on credit notes (fixed in 0.3.2) and two feature requests for PDF branding."
+  },
+  "__handoff": {
+    "reply": "# Handoff\n\n## 1. Role and standing orders\n- Release engineer for the billing service; keep answers short, run the tests before every commit.\n\n## 2. Goal and current state\n- Ship 0.4: rounding fix reviewed, retry with backoff merged, changelog done, CI green (build 1842).\n\n## 3. Decisions made\n- Round once per invoice; keep `rounding: line` as an opt-out until 0.6.\n\n## 4. Open items and pending requests\n- Free space on staging before the nightly backup, then tag v0.4.0.\n\n## 5. Files, paths, services, commands\n- src/invoice.ts, src/payments.ts, CHANGELOG.md\n\n## 6. Running work\n- The Coordinator chat watches CI and staging.\n\n## 7. Gotchas\n- Card declines (402) must never be retried.\n\n## 8. Next step\n- Clean the old build artifacts on staging, then tag v0.4.0."
+  }
+}

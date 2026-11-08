@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# dsh-post: drop a SILENT message into a DSH chat from a script or cron job.
+# The chat shows it (and its model reads it on its next turn) but it is NOT woken.
+#
+#   dsh-post [--kind report|alert|note] [--from NAME] [--user-only] "<chat id, prefix or exact title>" "<text>"
+#   echo "long text" | dsh-post "Coordinator" -
+#
+# Secret: $DSH_CONDUCTOR_SECRET, or the file named by $DSH_CONDUCTOR_SECRET_FILE
+# (never printed). Server: $DSH_URL (default http://127.0.0.1:3080).
+set -euo pipefail
+kind=note
+from="${DSH_POST_FROM:-$(basename "${0}") on $(hostname -s)}"
+visible="user+model"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --kind) kind="$2"; shift 2 ;;
+    --from) from="$2"; shift 2 ;;
+    --user-only) visible="user"; shift ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    *) break ;;
+  esac
+done
+[ $# -eq 2 ] || { echo "usage: dsh-post [--kind K] [--from NAME] [--user-only] <chat> <text|->" >&2; exit 2; }
+to="$1"
+text="$2"
+[ "$text" = "-" ] && text="$(cat)"
+secret="${DSH_CONDUCTOR_SECRET:-}"
+if [ -z "$secret" ] && [ -n "${DSH_CONDUCTOR_SECRET_FILE:-}" ]; then secret="$(tr -d '\r\n' < "$DSH_CONDUCTOR_SECRET_FILE")"; fi
+[ -n "$secret" ] || { echo "dsh-post: set DSH_CONDUCTOR_SECRET or DSH_CONDUCTOR_SECRET_FILE" >&2; exit 2; }
+body="$(TO="$to" TEXT="$text" KIND="$kind" FROM="$from" VISIBLE="$visible" node -e 'process.stdout.write(JSON.stringify({ to: process.env.TO, text: process.env.TEXT, kind: process.env.KIND, from: process.env.FROM, visible: process.env.VISIBLE }))')"
+curl -sS --fail-with-body -m 30 \
+  -H "content-type: application/json" \
+  -H @<(printf 'x-conductor-secret: %s\n' "$secret") \
+  --data-binary "$body" \
+  "${DSH_URL:-http://127.0.0.1:3080}/dsh-conductor/api/remote/post"
+echo

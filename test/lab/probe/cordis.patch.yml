@@ -1,0 +1,4 @@
+# LAB ONLY. Mounts the HTTP driver used by test/e2e.
+- insert:
+    - id: conductor-lab-probe
+      name: 'conductor-lab-probe'

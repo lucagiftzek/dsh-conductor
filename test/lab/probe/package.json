@@ -1,0 +1,10 @@
+{
+  "name": "conductor-lab-probe",
+  "version": "0.0.0",
+  "private": true,
+  "description": "LAB ONLY: HTTP driver for end-to-end tests of dsh-conductor on an isolated DSH instance. Never install in a real profile.",
+  "type": "module",
+  "main": "index.js",
+  "exports": { ".": "./index.js", "./package.json": "./package.json" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

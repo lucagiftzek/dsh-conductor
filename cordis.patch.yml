@@ -1,0 +1,27 @@
+# dsh-conductor bundle patch.
+#
+# Inserts ONE host row so the composition mounts this package. The node half
+# (exports ".") installs the compaction hook (/new, /clear, /force-compact),
+# registers the slash commands, the three model tools (chat, chats, tasks),
+# the settings namespace dsh-conductor and the JSON route /dsh-conductor/api.
+# The browser half (lib/client.js, declared through package.json dsh.client)
+# registers the "Conductor" tab on dsh-better-sidebar, the star in the
+# message action row, the client commands and a Settings section.
+#
+# Install (any host):
+#   1. dsh plugin --profile web add @lucagiftzek/dsh-conductor
+#      (or from GitHub: dsh plugin --profile web add github:lucagiftzek/dsh-conductor)
+#   2. coming from dsh-orchestrator, dsh-force-compact or dsh-continue: run
+#      node scripts/migrate-profile.mjs (dry run) then --apply; it removes the
+#      old plugins and carries their configuration over
+#   3. restart dsh-web
+#
+# KILL SWITCH without uninstalling: add to the profile's cordis.patch.yml
+#     - id: dsh-conductor
+#       disabled: true
+#   and restart dsh-web. DSH_CONDUCTOR_DISABLE=1 in the dsh-web environment
+#   does the same at the next start. Single features: Settings, Conductor,
+#   Modules (context, pins, posts, versions, orchestration).
+- insert:
+    - id: dsh-conductor
+      name: '@lucagiftzek/dsh-conductor'
