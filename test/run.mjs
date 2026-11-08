@@ -705,10 +705,17 @@ test('agents: catalog degrades to live agents when the controller seam hangs', a
     agentsList: [{ id: 'live-1', status: 'idle', session: { header: { id: 'live-1' } } }],
     controller,
   })
-  const agents = makeAgents(ctx, makeCfg({ agents: { catalogTtlMs: 50 } }))
-  const cat = await agents.catalog({ force: true })
-  assert.ok(cat.rows.some((r) => r.sessionId === 'live-1'), 'live agent row survives the controller hang')
-  assert.ok(Array.isArray(cat.degraded) && cat.degraded.length >= 1, 'degraded reason recorded: ' + JSON.stringify(cat.degraded))
+  const agents = makeAgents(ctx, makeCfg({ agents: { catalogTtlMs: 50, listBudgetMs: 300 } }))
+  // The budget timer is unref'd (it must never hold a server process open), so
+  // keep this test's event loop alive while it waits, or a quiet runner ends it.
+  const keepAlive = setInterval(() => {}, 1000)
+  try {
+    const cat = await agents.catalog({ force: true })
+    assert.ok(cat.rows.some((r) => r.sessionId === 'live-1'), 'live agent row survives the controller hang')
+    assert.ok(Array.isArray(cat.degraded) && cat.degraded.length >= 1, 'degraded reason recorded: ' + JSON.stringify(cat.degraded))
+  } finally {
+    clearInterval(keepAlive)
+  }
 })
 
 // ── agents facade ────────────────────────────────────────────────────────────
